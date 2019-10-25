@@ -1,0 +1,6 @@
+# Project exclude paths
+/.gradle/
+/Raspberry/build/
+/Raspberry/build/classes/java/main/
+/Shared/build/
+/Shared/build/classes/java/main/

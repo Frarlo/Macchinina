@@ -1,0 +1,44 @@
+package gov.ismonnet.commons.netty.core.cpacket;
+
+import gov.ismonnet.commons.netty.CustomByteBuf;
+import gov.ismonnet.commons.netty.core.CPacket;
+import gov.ismonnet.commons.netty.core.CPacketParser;
+
+public class EnableUdpPacket implements CPacket {
+
+    private final String udpIp;
+    private final int udpPort;
+
+    public EnableUdpPacket(String udpIp,
+                           int udpPort) {
+
+        // Max IP length taken from here: https://stackoverflow.com/a/7477384
+        if(udpIp.length() > 45)
+            udpIp = udpIp.substring(0, 45);
+
+        this.udpIp = udpIp;
+        this.udpPort = udpPort;
+    }
+
+    public String getUdpIp() {
+        return udpIp;
+    }
+
+    public int getUdpPort() {
+        return udpPort;
+    }
+
+    @Override
+    public void writePacket(CustomByteBuf buf) throws Exception {
+        buf.writeString(udpIp);
+        buf.writeInt(udpPort);
+    }
+
+    public static final CPacketParser PARSER = (CustomByteBuf buf) -> {
+
+        final String host = buf.readString(45);
+        final int port = buf.readInt();
+
+        return new EnableUdpPacket(host, port);
+    };
+}

@@ -1,0 +1,19 @@
+
+group 'gov.ismonnet'
+
+subprojects {
+    apply plugin: 'java'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    compileJava.options.encoding = 'UTF-8'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+ext {
+    nettyVersion = '4.1.30.Final'
+}
