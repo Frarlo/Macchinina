@@ -48,6 +48,7 @@ public class ServerNetManager implements ServerNetService, LifeCycle {
     @Override
     public void start() throws NetworkException {
         tcpToUdp = new ConcurrentHashMap<>();
+        //TODO
 //        datagramNetManager.setConnected(Collections.unmodifiableCollection(tcpToUdp.values()));
     }
 

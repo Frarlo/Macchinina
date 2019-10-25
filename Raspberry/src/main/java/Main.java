@@ -14,6 +14,7 @@ public class Main {
                 .udpPort(getUnboundPort())
                 .build();
 
+        //TODO: fix lifecycle
         app.lifeCycle().register(app.discoverer());
         app.lifeCycle().register(app.netService());
 

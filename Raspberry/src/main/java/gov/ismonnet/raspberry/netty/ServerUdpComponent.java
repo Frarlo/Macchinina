@@ -111,7 +111,7 @@ public class ServerUdpComponent implements MultiServerComponent, LifeCycle {
 
     @Override
     public Future<Void> sendPacketToAll(SPacket packet) {
-
+        //TODO
 //        final Map<InetSocketAddress, ChannelFuture> futures = new LinkedHashMap<>(connected.size());
 //        for(InetSocketAddress dst : connected) {
 //            final DatagramPacketContext ctx = new DefaultDatagramPacketContext(packet, dst);
