@@ -1,6 +1,6 @@
 import gov.ismonnet.commons.utils.SneakyThrow;
-import gov.ismonnet.raspberry.App;
-import gov.ismonnet.raspberry.DaggerApp;
+import gov.ismonnet.raspberry.AppComponent;
+import gov.ismonnet.raspberry.DaggerAppComponent;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,15 +9,12 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
 
-        final App app = DaggerApp.builder()
+        final AppComponent app = DaggerAppComponent.builder()
                 .tcpPort(getUnboundPort())
                 .udpPort(getUnboundPort())
                 .build();
 
-        //TODO: fix lifecycle
-        app.lifeCycle().register(app.discoverer());
-        app.lifeCycle().register(app.netService());
-
+        app.eagerInit();
         app.lifeCycle().start();
         addShutdownHook(() -> app.lifeCycle().stop());
     }

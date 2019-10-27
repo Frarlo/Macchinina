@@ -1,9 +1,6 @@
 package gov.ismonnet.raspberry.discoverer;
 
-import gov.ismonnet.commons.di.Datagram;
-import gov.ismonnet.commons.di.LifeCycle;
-import gov.ismonnet.commons.di.Multicast;
-import gov.ismonnet.commons.di.Stream;
+import gov.ismonnet.commons.di.*;
 import gov.ismonnet.commons.netty.CustomByteBuf;
 import gov.ismonnet.commons.netty.core.NetworkException;
 import io.netty.bootstrap.Bootstrap;
@@ -51,7 +48,8 @@ public class LanServerPinger implements LifeCycle {
     @Inject LanServerPinger(@Multicast InetSocketAddress multicastGroup,
                             @Stream int tcpPortToSend,
                             @Datagram int udpPortToSend,
-                            @Multicast ScheduledExecutorService scheduler) {
+                            @Multicast ScheduledExecutorService scheduler,
+                            LifeCycleService lifeCycleService) {
 
         this.scheduler = scheduler;
 
@@ -71,6 +69,8 @@ public class LanServerPinger implements LifeCycle {
                     }
                 })
                 .localAddress(address);
+
+        lifeCycleService.register(this);
     }
 
     @Override

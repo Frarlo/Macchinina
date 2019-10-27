@@ -3,6 +3,7 @@ package gov.ismonnet.raspberry.netty;
 import com.google.auto.factory.AutoFactory;
 import com.google.auto.factory.Provided;
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
 import gov.ismonnet.commons.di.Stream;
 import gov.ismonnet.commons.netty.charstuffing.CharStuffingDecoder;
 import gov.ismonnet.commons.netty.charstuffing.CharStuffingEncoder;
@@ -52,6 +53,7 @@ public class ServerTcpComponent implements MultiServerComponent, LifeCycle {
     private ChannelFuture future;
 
     ServerTcpComponent(@Provided @Stream int port,
+                       @Provided LifeCycleService lifeCycleService,
                        ChannelInboundHandler handler) {
 
         this.port = port;
@@ -76,6 +78,8 @@ public class ServerTcpComponent implements MultiServerComponent, LifeCycle {
                     }
                 })
                 .localAddress(port);
+
+        lifeCycleService.register(this);
     }
 
     @Override

@@ -2,6 +2,7 @@ package gov.ismonnet.raspberry.netty;
 
 import gov.ismonnet.commons.di.Datagram;
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
 import gov.ismonnet.commons.di.Stream;
 import gov.ismonnet.commons.netty.core.CPacket;
 import gov.ismonnet.commons.netty.core.NetworkException;
@@ -40,9 +41,12 @@ public class ServerNetManager implements ServerNetService, LifeCycle {
     private Map<Channel, InetSocketAddress> tcpToUdp;
 
     @Inject ServerNetManager(@Stream MultiServerComponentFactory streamNetManager,
-                             @Datagram MultiServerComponentFactory datagramNetManager) {
+                             @Datagram MultiServerComponentFactory datagramNetManager,
+                             LifeCycleService lifeCycleService) {
         this.streamNetManager = streamNetManager.create(new StreamInboundHandler());
         this.datagramNetManager = datagramNetManager.create(new DatagramInboundHandler());
+
+        lifeCycleService.register(this);
     }
 
     @Override

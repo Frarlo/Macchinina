@@ -4,6 +4,7 @@ import com.google.auto.factory.AutoFactory;
 import com.google.auto.factory.Provided;
 import gov.ismonnet.commons.di.Datagram;
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
 import gov.ismonnet.commons.netty.core.NetworkException;
 import gov.ismonnet.commons.netty.core.SPacket;
 import gov.ismonnet.commons.netty.datagram.DatagramPacketContext;
@@ -47,6 +48,7 @@ public class ServerUdpComponent implements MultiServerComponent, LifeCycle {
     private ChannelFuture future;
 
     ServerUdpComponent(@Provided @Datagram int port,
+                       @Provided LifeCycleService lifeCycleService,
                        ChannelInboundHandler handler) {
 
         this.port = port;
@@ -66,6 +68,8 @@ public class ServerUdpComponent implements MultiServerComponent, LifeCycle {
                         );
                     }
                 });
+
+        lifeCycleService.register(this);
     }
 
     @Override
