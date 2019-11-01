@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
-public class ServerNetManager implements ServerNetService, LifeCycle {
+class ServerNetManager implements ServerNetService, LifeCycle {
 
     // Constants
 

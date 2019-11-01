@@ -29,7 +29,15 @@ public class EnableUdpPacket implements CPacket {
     }
 
     @Override
-    public void writePacket(CustomByteBuf buf) throws Exception {
+    public String toString() {
+        return "EnableUdpPacket{" +
+                "udpIp='" + udpIp + '\'' +
+                ", udpPort=" + udpPort +
+                '}';
+    }
+
+    @Override
+    public void writePacket(CustomByteBuf buf) {
         buf.writeString(udpIp);
         buf.writeInt(udpPort);
     }

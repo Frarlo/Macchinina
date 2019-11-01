@@ -10,6 +10,11 @@ public class PingPacket implements CPacket {
     }
 
     @Override
+    public String toString() {
+        return "PingPacket{}";
+    }
+
+    @Override
     public void writePacket(CustomByteBuf buf) {
     }
 

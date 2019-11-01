@@ -10,6 +10,11 @@ public class PongPacket implements SPacket {
     }
 
     @Override
+    public String toString() {
+        return "PongPacket{}";
+    }
+
+    @Override
     public void writePacket(CustomByteBuf buf) {
     }
 
