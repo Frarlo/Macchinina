@@ -118,6 +118,7 @@ class ClientUdpComponent implements MultiClientComponent, LifeCycle {
         ));
     }
 
+    @Override
     public SocketAddress getLocalAddress() {
         return channelFuture.channel().localAddress();
     }

@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.inject.Inject;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -136,5 +137,10 @@ class ClientTcpComponent implements MultiClientComponent, LifeCycle {
 
             super.channelActive(ctx);
         }
+    }
+
+    @Override
+    public SocketAddress getLocalAddress() {
+        return channelFuture.channel().localAddress();
     }
 }
