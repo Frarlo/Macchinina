@@ -5,13 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 
-@Singleton
 public class LifeCycleManager implements LifeCycleService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LifeCycleManager.class);
@@ -42,12 +40,12 @@ public class LifeCycleManager implements LifeCycleService {
     }
 
     public void stop() {
-        LOGGER.debug("Sopping services");
+        LOGGER.debug("Stopping services");
         IntStream.range(0, objects.size())
                 .map(i -> (objects.size() - 1 - i))
                 .mapToObj(objects::get)
                 .forEach(o -> {
-                    LOGGER.debug("Sopping service " + o.getClass().getSimpleName());
+                    LOGGER.debug("Stopping service " + o.getClass().getSimpleName());
                     SneakyThrow.runUnchecked(o::stop);
                 });
     }

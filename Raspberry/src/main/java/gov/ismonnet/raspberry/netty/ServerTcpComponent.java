@@ -26,6 +26,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Inject;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,9 +53,9 @@ public class ServerTcpComponent implements MultiServerComponent, LifeCycle {
     private ChannelGroup allChannels;
     private ChannelFuture future;
 
-    ServerTcpComponent(@Provided @Stream int port,
-                       @Provided LifeCycleService lifeCycleService,
-                       ChannelInboundHandler handler) {
+    @Inject ServerTcpComponent(@Provided @Stream int port,
+                               @Provided LifeCycleService lifeCycleService,
+                               ChannelInboundHandler handler) {
 
         this.port = port;
         this.bootstrap = new ServerBootstrap()
@@ -115,10 +116,8 @@ public class ServerTcpComponent implements MultiServerComponent, LifeCycle {
         try {
             LOGGER.info("Closing TcpLanNetManager on {}...", port);
 
-            bossGroup.shutdownGracefully()
-                    .await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
-            workerGroup.shutdownGracefully()
-                    .await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+            bossGroup.shutdownGracefully().await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+            workerGroup.shutdownGracefully().await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
         } catch(Throwable t) {
             throw new RuntimeException("Couldn't close TcpLanNetManager", t);
@@ -127,7 +126,7 @@ public class ServerTcpComponent implements MultiServerComponent, LifeCycle {
 
     @Override
     public Future<Void> sendPacket(MultiServerPacketContext ctx) {
-        return ctx.getChannelHandlerContext().writeAndFlush(ctx.getPacket());
+        return ctx.getChannelHandlerContext().writeAndFlush(ctx);
     }
 
     @Override

@@ -1,6 +1,10 @@
 package gov.ismonnet.computer.netty;
 
+import com.google.auto.factory.AutoFactory;
+import com.google.auto.factory.Provided;
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
+import gov.ismonnet.commons.di.Stream;
 import gov.ismonnet.commons.netty.charstuffing.CharStuffingDecoder;
 import gov.ismonnet.commons.netty.charstuffing.CharStuffingEncoder;
 import gov.ismonnet.commons.netty.core.CPacket;
@@ -20,14 +24,15 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetAddress;
+import javax.inject.Inject;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ClientTcpComponent implements MultiClientComponent, LifeCycle {
+@AutoFactory(implementing = ClientComponentFactory.class)
+class ClientTcpComponent implements MultiClientComponent, LifeCycle {
 
     // Constants
 
@@ -46,14 +51,9 @@ public class ClientTcpComponent implements MultiClientComponent, LifeCycle {
 
     private Future<?> pingFuture;
 
-    public ClientTcpComponent(InetAddress addr,
-                              int port,
-                              ChannelInboundHandler handler) {
-        this(new InetSocketAddress(addr, port), handler);
-    }
-
-    public ClientTcpComponent(InetSocketAddress addr,
-                              ChannelInboundHandler handler) {
+    @Inject ClientTcpComponent(@Provided @Stream InetSocketAddress addr,
+                               @Provided LifeCycleService lifeCycleService,
+                               ChannelInboundHandler handler) {
 
         this.addr = addr;
 
@@ -76,6 +76,8 @@ public class ClientTcpComponent implements MultiClientComponent, LifeCycle {
                     }
                 })
                 .remoteAddress(addr);
+
+        lifeCycleService.register(this);
     }
 
     @Override
@@ -110,8 +112,7 @@ public class ClientTcpComponent implements MultiClientComponent, LifeCycle {
             if(pingFuture != null)
                 pingFuture.cancel(true);
 
-            group.shutdownGracefully()
-                    .await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
+            group.shutdownGracefully().await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
 
         } catch (Throwable t) {
             throw new RuntimeException("Couldn't open ClientTcpNetManager", t);

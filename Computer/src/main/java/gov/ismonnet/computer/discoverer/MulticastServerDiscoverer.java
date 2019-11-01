@@ -1,9 +1,12 @@
-package gov.ismonnet.computer.netty;
+package gov.ismonnet.computer.discoverer;
 
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
+import gov.ismonnet.commons.di.Multicast;
 import gov.ismonnet.commons.netty.CustomByteBuf;
 import gov.ismonnet.commons.netty.core.NetworkException;
 import gov.ismonnet.commons.utils.MulticastUtils;
+import gov.ismonnet.commons.utils.SneakyThrow;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -14,20 +17,23 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Inject;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public class LanServerDiscoverer implements LifeCycle {
+class MulticastServerDiscoverer implements ServerDiscoverer, LifeCycle {
 
     // Constants
 
-    private static final Logger LOGGER = LogManager.getLogger(LanServerDiscoverer.class);
+    private static final Logger LOGGER = LogManager.getLogger(MulticastServerDiscoverer.class);
 
     private static final int SHUTDOWN_TIMEOUT = 5000;
 
@@ -35,22 +41,23 @@ public class LanServerDiscoverer implements LifeCycle {
 
     private final InetSocketAddress mcastSocketAddr;
 
-    private final Consumer<Result> addrConsumer;
+    private final Set<Consumer<DiscoveredServer>> listeners;
     private final List<MulticastDiscoverer> discoverers;
 
-    public LanServerDiscoverer(String multicastGroup,
-                               int multicastPort,
-                               Consumer<Result> addrConsumer) throws SocketException {
+    @Inject MulticastServerDiscoverer(@Multicast InetSocketAddress mcastSocketAddr,
+                                      LifeCycleService lifeCycleService) {
 
-        this.mcastSocketAddr = new InetSocketAddress(multicastGroup, multicastPort);
+        this.mcastSocketAddr = mcastSocketAddr;
 
-        this.addrConsumer = addrConsumer;
+        this.listeners = ConcurrentHashMap.newKeySet();
         this.discoverers = new ArrayList<>();
 
         // Bind on all the IPv4 NICs that support multicast
 
-        for(NetworkInterface interf : MulticastUtils.getIPv4NetworkInterfaces())
-            discoverers.add(new MulticastDiscoverer(interf));
+        SneakyThrow.callUnchecked(MulticastUtils::getIPv4NetworkInterfaces)
+                .forEach(networkInterface -> discoverers.add(new MulticastDiscoverer(networkInterface)));
+
+        lifeCycleService.register(this);
     }
 
     @Override
@@ -63,6 +70,16 @@ public class LanServerDiscoverer implements LifeCycle {
     public void stop() throws NetworkException {
         for(MulticastDiscoverer discoverer : discoverers)
             discoverer.close();
+    }
+
+    @Override
+    public void addListener(Consumer<DiscoveredServer> listener) {
+        listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(Consumer<DiscoveredServer> listener) {
+        listeners.remove(listener);
     }
 
     private class MulticastDiscoverer {
@@ -104,9 +121,7 @@ public class LanServerDiscoverer implements LifeCycle {
 
         public void close() throws NetworkException {
             try {
-                group.shutdownGracefully()
-                        .await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
-
+                group.shutdownGracefully().await(SHUTDOWN_TIMEOUT, TimeUnit.MILLISECONDS);
             } catch (Throwable t) {
                 throw new NetworkException("Couldn't close " + this, t);
             }
@@ -130,7 +145,7 @@ public class LanServerDiscoverer implements LifeCycle {
 
                 final CustomByteBuf buff = new CustomByteBuf(msg.content());
 
-                if(buff.readString(10).equals("CascoSmart")) {
+                if(buff.readString(6).equals("JM_War")) {
 
                     final InetAddress addr = msg.sender().getAddress();
                     final int newTcpPort = buff.readInt();
@@ -141,7 +156,8 @@ public class LanServerDiscoverer implements LifeCycle {
                                     " (NIC: {}, Multicast Group: {})",
                             addr, newTcpPort, newUdpPort, interf, mcastSocketAddr);
 
-                    addrConsumer.accept(new Result(interf, addr, newTcpPort, newUdpPort));
+                    final Result res = new Result(interf, addr, newTcpPort, newUdpPort);
+                    listeners.forEach(c -> c.accept(res));
                 }
             }
 
@@ -155,31 +171,67 @@ public class LanServerDiscoverer implements LifeCycle {
         }
     }
 
-    public static final class Result {
+    static class Result implements DiscoveredServer {
 
-        public NetworkInterface interf;
-        public InetAddress addr;
-        public int tcpPort;
-        public int udpPort;
+        private final NetworkInterface networkInterface;
+        private final InetAddress address;
+        private final int streamPort;
+        private final int datagramPort;
 
-        public Result(NetworkInterface interf,
-                      InetAddress addr,
-                      int tcpPort,
-                      int udpPort) {
+        Result(NetworkInterface networkInterface,
+               InetAddress address,
+               int streamPort,
+               int datagramPort) {
 
-            this.interf = interf;
-            this.addr = addr;
-            this.tcpPort = tcpPort;
-            this.udpPort = udpPort;
+            this.networkInterface = networkInterface;
+            this.address = address;
+            this.streamPort = streamPort;
+            this.datagramPort = datagramPort;
+        }
+
+        @Override
+        public NetworkInterface getNetworkInterface() {
+            return networkInterface;
+        }
+
+        @Override
+        public InetAddress getAddress() {
+            return address;
+        }
+
+        @Override
+        public int getStreamPort() {
+            return streamPort;
+        }
+
+        @Override
+        public int getDatagramPort() {
+            return datagramPort;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Result)) return false;
+            Result result = (Result) o;
+            return getStreamPort() == result.getStreamPort() &&
+                    getDatagramPort() == result.getDatagramPort() &&
+                    getNetworkInterface().equals(result.getNetworkInterface()) &&
+                    getAddress().equals(result.getAddress());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(getNetworkInterface(), getAddress(), getStreamPort(), getDatagramPort());
         }
 
         @Override
         public String toString() {
             return "Result{" +
-                    "interf=" + interf +
-                    ", addr=" + addr +
-                    ", tcpPort=" + tcpPort +
-                    ", udpPort=" + udpPort +
+                    "networkInterface=" + networkInterface +
+                    ", address=" + address +
+                    ", streamPort=" + streamPort +
+                    ", datagramPort=" + datagramPort +
                     '}';
         }
     }

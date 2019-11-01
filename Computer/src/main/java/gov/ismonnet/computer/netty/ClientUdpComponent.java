@@ -1,6 +1,10 @@
 package gov.ismonnet.computer.netty;
 
+import com.google.auto.factory.AutoFactory;
+import com.google.auto.factory.Provided;
+import gov.ismonnet.commons.di.Datagram;
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
 import gov.ismonnet.commons.netty.core.CPacket;
 import gov.ismonnet.commons.netty.core.NetworkException;
 import gov.ismonnet.commons.netty.datagram.DatagramPacketDecoder;
@@ -19,14 +23,15 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetAddress;
+import javax.inject.Inject;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ClientUdpComponent implements MultiClientComponent, LifeCycle {
+@AutoFactory(implementing = ClientComponentFactory.class)
+class ClientUdpComponent implements MultiClientComponent, LifeCycle {
 
     // Constants
 
@@ -43,16 +48,9 @@ public class ClientUdpComponent implements MultiClientComponent, LifeCycle {
     private EventLoopGroup group;
     private ChannelFuture channelFuture;
 
-
-    public ClientUdpComponent(InetAddress remoteAddress,
-                              int port,
-                              ChannelInboundHandler handler) {
-
-        this(new InetSocketAddress(remoteAddress, port), handler);
-    }
-
-    public ClientUdpComponent(InetSocketAddress remoteAddress,
-                              ChannelInboundHandler handler) {
+    @Inject ClientUdpComponent(@Provided @Datagram InetSocketAddress remoteAddress,
+                               @Provided LifeCycleService lifeCycleService,
+                               ChannelInboundHandler handler) {
 
         this.remoteAddress = remoteAddress;
 
@@ -71,6 +69,8 @@ public class ClientUdpComponent implements MultiClientComponent, LifeCycle {
                     }
                 })
                 .remoteAddress(remoteAddress);
+
+        lifeCycleService.register(this);
     }
 
     @Override

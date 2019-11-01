@@ -2,11 +2,7 @@ package gov.ismonnet.raspberry;
 
 import dagger.BindsInstance;
 import dagger.Component;
-import gov.ismonnet.commons.di.Datagram;
-import gov.ismonnet.commons.di.LifeCycleManager;
-import gov.ismonnet.commons.di.Stream;
-import gov.ismonnet.raspberry.di.EagerInit;
-import gov.ismonnet.raspberry.di.LifeCycleModule;
+import gov.ismonnet.commons.di.*;
 import gov.ismonnet.raspberry.discoverer.DiscovererModule;
 import gov.ismonnet.raspberry.netty.ServerNetModule;
 
@@ -14,19 +10,19 @@ import javax.inject.Singleton;
 import java.util.Set;
 
 @Singleton
-@Component(modules = { LifeCycleModule.class, DiscovererModule.class, ServerNetModule.class })
+@Component(modules = { AppModule.class, DiscovererModule.class, ServerNetModule.class })
 public interface AppComponent {
 
-    Set<EagerInit> eagerInit();
+    LifeCycleService lifeCycle();
 
-    LifeCycleManager lifeCycle();
+    Set<EagerInit> eagerInit();
 
     @Component.Builder
     interface Builder {
 
-        @BindsInstance Builder tcpPort(@Stream int userName);
+        @BindsInstance Builder tcpPort(@Stream int tcpPort);
 
-        @BindsInstance Builder udpPort(@Datagram int userName);
+        @BindsInstance Builder udpPort(@Datagram int udpPort);
 
         AppComponent build();
     }

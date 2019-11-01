@@ -6,7 +6,7 @@ import dagger.Provides;
 import dagger.multibindings.IntoSet;
 import gov.ismonnet.commons.di.Multicast;
 import gov.ismonnet.commons.utils.ThreadFactoryBuilder;
-import gov.ismonnet.raspberry.di.EagerInit;
+import gov.ismonnet.commons.di.EagerInit;
 
 import javax.inject.Inject;
 import java.net.InetSocketAddress;
@@ -23,7 +23,7 @@ public abstract class DiscovererModule {
                 .build());
     }
 
-    @Provides @Multicast static InetSocketAddress providesMulticastGroup() {
+    @Provides @Multicast static InetSocketAddress providesMulticastAddress() {
         return new InetSocketAddress("239.255.43.42", 44337);
     }
 

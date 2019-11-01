@@ -5,7 +5,7 @@ import gov.ismonnet.raspberry.DaggerAppComponent;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-public class Main {
+public class RaspberryMain {
 
     public static void main(String[] args) throws Exception {
 

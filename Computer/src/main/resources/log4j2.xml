@@ -9,7 +9,7 @@
         <Logger name="gov.ismonnet" additivity="false" level="trace">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="gov.ismonnet.raspberry.discoverer" additivity="false" level="warn">
+        <Logger name="gov.ismonnet.computer.discoverer" additivity="false" level="warn">
             <AppenderRef ref="Console"/>
         </Logger>
         <Root level="warn">

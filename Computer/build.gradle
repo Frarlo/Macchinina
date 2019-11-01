@@ -11,6 +11,14 @@ dependencies {
 
     compile 'org.apache.logging.log4j:log4j-api:2.11.1'
     compile 'org.apache.logging.log4j:log4j-core:2.11.1'
+
+    // Dagger
+
+    compile 'com.google.dagger:dagger:2.24'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.24'
+
+    compile 'com.google.auto.factory:auto-factory:1.0-beta6'
+    annotationProcessor 'com.google.auto.factory:auto-factory:1.0-beta6'
 }
 
 jar {

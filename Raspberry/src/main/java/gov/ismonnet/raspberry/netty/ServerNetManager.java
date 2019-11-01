@@ -20,13 +20,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
-@Singleton
 public class ServerNetManager implements ServerNetService, LifeCycle {
 
     // Constants
@@ -93,11 +91,9 @@ public class ServerNetManager implements ServerNetService, LifeCycle {
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             LOGGER.error("Error in TCP pipeline. Closing connection {}", ctx, cause);
             ctx.close();
-
-            super.exceptionCaught(ctx, cause);
         }
     }
 
@@ -109,9 +105,8 @@ public class ServerNetManager implements ServerNetService, LifeCycle {
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             LOGGER.error("Error in UDP pipeline", cause);
-            super.exceptionCaught(ctx, cause);
         }
     }
 

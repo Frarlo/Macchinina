@@ -39,13 +39,13 @@ public class LanServerPinger implements LifeCycle {
 
     private final int tcpPortToSend;
     private final int udpPortToSend;
-    private final InetSocketAddress multicastGroup;
+    private final InetSocketAddress multicastAddress;
 
     private EventLoopGroup group;
     private ChannelFuture channelFuture;
     private Future<?> pingFuture;
 
-    @Inject LanServerPinger(@Multicast InetSocketAddress multicastGroup,
+    @Inject LanServerPinger(@Multicast InetSocketAddress multicastAddress,
                             @Stream int tcpPortToSend,
                             @Datagram int udpPortToSend,
                             @Multicast ScheduledExecutorService scheduler,
@@ -55,7 +55,7 @@ public class LanServerPinger implements LifeCycle {
 
         this.tcpPortToSend = tcpPortToSend;
         this.udpPortToSend = udpPortToSend;
-        this.multicastGroup = multicastGroup;
+        this.multicastAddress = multicastAddress;
         this.address = new InetSocketAddress(0);
 
         this.group = new NioEventLoopGroup();
@@ -79,7 +79,7 @@ public class LanServerPinger implements LifeCycle {
             return;
 
         try {
-            LOGGER.info("Binding LanServerPinger on {} to ping multicast group {}...", address, multicastGroup);
+            LOGGER.info("Binding LanServerPinger on {} to ping multicast address {}...", address, multicastAddress);
 
             this.group = new NioEventLoopGroup();
             this.channelFuture = bootstrap
@@ -90,7 +90,7 @@ public class LanServerPinger implements LifeCycle {
             // Schedule ping future
 
             final CustomByteBuf payload = new CustomByteBuf(Unpooled.buffer());
-            payload.writeString("CascoSmart");
+            payload.writeString("JM_War");
             payload.writeInt(tcpPortToSend);
             payload.writeInt(udpPortToSend);
 
@@ -98,7 +98,7 @@ public class LanServerPinger implements LifeCycle {
                 if(!running.get())
                     return;
 
-                final DatagramPacket packet = new DatagramPacket(payload.retain(), multicastGroup);
+                final DatagramPacket packet = new DatagramPacket(payload.retain(), multicastAddress);
                 LOGGER.trace("Sending datagram packet {}", packet);
                 channelFuture.channel().writeAndFlush(packet);
 
@@ -136,7 +136,7 @@ public class LanServerPinger implements LifeCycle {
                 ", bootstrap=" + bootstrap +
                 ", tcpPortToSend=" + tcpPortToSend +
                 ", udpPortToSend=" + udpPortToSend +
-                ", multicastGroup=" + multicastGroup +
+                ", multicastAddress=" + multicastAddress +
                 '}';
     }
 }

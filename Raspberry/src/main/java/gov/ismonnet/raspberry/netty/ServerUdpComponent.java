@@ -24,6 +24,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Inject;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,9 +48,9 @@ public class ServerUdpComponent implements MultiServerComponent, LifeCycle {
     private EventLoopGroup group;
     private ChannelFuture future;
 
-    ServerUdpComponent(@Provided @Datagram int port,
-                       @Provided LifeCycleService lifeCycleService,
-                       ChannelInboundHandler handler) {
+    @Inject ServerUdpComponent(@Provided @Datagram int port,
+                               @Provided LifeCycleService lifeCycleService,
+                               ChannelInboundHandler handler) {
 
         this.port = port;
         this.bootstrap = new Bootstrap()

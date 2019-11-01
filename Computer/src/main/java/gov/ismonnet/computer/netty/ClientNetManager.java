@@ -1,70 +1,74 @@
 package gov.ismonnet.computer.netty;
 
+import gov.ismonnet.commons.di.Datagram;
 import gov.ismonnet.commons.di.LifeCycle;
+import gov.ismonnet.commons.di.LifeCycleService;
+import gov.ismonnet.commons.di.Stream;
 import gov.ismonnet.commons.netty.core.CPacket;
 import gov.ismonnet.commons.netty.core.NetworkException;
 import gov.ismonnet.commons.netty.core.SPacket;
-import gov.ismonnet.commons.netty.core.cpacket.EnableUdpPacket;
 import gov.ismonnet.commons.netty.multi.MultiClientComponent;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import javax.inject.Inject;
 import java.util.concurrent.Future;
 
-public class ClientNetManager implements ClientNetService, LifeCycle {
+class ClientNetManager implements ClientNetService, LifeCycle {
 
     private static final Logger LOGGER = LogManager.getLogger(ClientNetManager.class);
 
-    private final ClientTcpComponent tcpNetManager;
-    private final ClientUdpComponent udpNetManager;
+    private final MultiClientComponent streamNetManager;
+    private final MultiClientComponent datagramNetManager;
 
-    public ClientNetManager(InetAddress addr, int tcpPort, int udpPort) {
+    @Inject ClientNetManager(@Stream ClientComponentFactory streamComponentFactory,
+                             @Datagram ClientComponentFactory datagramComponentFactory,
+                             LifeCycleService lifeCycleService) {
 
-        this.tcpNetManager = new ClientTcpComponent(addr, tcpPort,
-                new SimpleChannelInboundHandler<SPacket>() {
-                    @Override
-                    protected void channelRead0(ChannelHandlerContext ctx, SPacket msg) throws Exception {
-                        receivePacket(msg, tcpNetManager);
-                    }
+        this.streamNetManager = streamComponentFactory.create(new SimpleChannelInboundHandler<SPacket>() {
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, SPacket msg) {
+                receivePacket(msg, streamNetManager);
+            }
 
-                    @Override
-                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                        LOGGER.error("Error in TCP pipeline", cause);
-                        //TODO:
-                        System.exit(-1);
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                LOGGER.error("Error in TCP pipeline", cause);
+                //TODO:
+                System.exit(-1);
 //                        client.close();
-                    }
-                });
-        this.udpNetManager = new ClientUdpComponent(addr, udpPort,
-                new SimpleChannelInboundHandler<SPacket>() {
-                    @Override
-                    protected void channelRead0(ChannelHandlerContext ctx, SPacket msg) throws Exception {
-                        receivePacket(msg, udpNetManager);
-                    }
+            }
+        });
+        this.datagramNetManager = datagramComponentFactory.create(new SimpleChannelInboundHandler<SPacket>() {
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, SPacket msg) {
+                receivePacket(msg, datagramNetManager);
+            }
 
-                    @Override
-                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-                        LOGGER.error("Error in UDP pipeline", cause);
-                        //TODO:
-                        System.exit(-1);
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+                LOGGER.error("Error in UDP pipeline", cause);
+                //TODO:
+                System.exit(-1);
 //                        client.close();
-                    }
-                });
+            }
+        });
+
+        lifeCycleService.register(this);
     }
 
     @Override
     public void start() throws NetworkException {
         // Enable UDP
 
-        final InetSocketAddress address = (InetSocketAddress) udpNetManager.getLocalAddress();
-        tcpNetManager.sendPacket(new EnableUdpPacket(
-                address.getAddress().getHostAddress(),
-                address.getPort()
-        ));
+        // TODO:
+//        final InetSocketAddress address = (InetSocketAddress) datagramNetManager.getLocalAddress();
+//        streamNetManager.sendPacket(new EnableUdpPacket(
+//                address.getAddress().getHostAddress(),
+//                address.getPort()
+//        ));
     }
 
     @Override
@@ -79,9 +83,9 @@ public class ClientNetManager implements ClientNetService, LifeCycle {
     @Override
     public Future<Void> sendPacket(CPacket packet, boolean reliable) {
         if(reliable)
-            return tcpNetManager.sendPacket(packet);
+            return streamNetManager.sendPacket(packet);
         else
-            return udpNetManager.sendPacket(packet);
+            return datagramNetManager.sendPacket(packet);
     }
 
     private void receivePacket(SPacket msg, MultiClientComponent netService) {
