@@ -21,6 +21,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.inject.Inject;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -51,7 +52,7 @@ class ServerNetManager implements ServerNetService, LifeCycle {
     public void start() throws NetworkException {
         tcpToUdp = new ConcurrentHashMap<>();
         //TODO
-//        datagramNetManager.setConnected(Collections.unmodifiableCollection(tcpToUdp.values()));
+        ServerUdpComponent.connected = Collections.unmodifiableCollection(tcpToUdp.values());
     }
 
     @Override

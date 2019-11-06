@@ -4,11 +4,13 @@ import gov.ismonnet.computer.BootstrapComponent;
 import gov.ismonnet.computer.DaggerAppComponent;
 import gov.ismonnet.computer.DaggerBootstrapComponent;
 import gov.ismonnet.computer.discoverer.DiscoveredServer;
+import io.netty.util.ResourceLeakDetector;
 
 public class ComputerMain {
 
     public static void main(String[] args) {
 
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
         final BootstrapComponent bootstrap = DaggerBootstrapComponent.create();
         bootstrap.eagerInit();
         bootstrap.lifeCycleService().start();

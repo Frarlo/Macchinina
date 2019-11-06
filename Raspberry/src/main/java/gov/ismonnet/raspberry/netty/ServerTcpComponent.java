@@ -13,6 +13,7 @@ import gov.ismonnet.commons.netty.multi.MultiServerComponent;
 import gov.ismonnet.commons.netty.multi.MultiServerPacketContext;
 import gov.ismonnet.commons.netty.multi.TcpPacketToContextDecoder;
 import gov.ismonnet.commons.netty.protocol.LanProtocol;
+import gov.ismonnet.commons.netty.stream.DefaultStreamPacketContext;
 import gov.ismonnet.commons.netty.stream.StreamPacketEncoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -131,7 +132,7 @@ public class ServerTcpComponent implements MultiServerComponent, LifeCycle {
 
     @Override
     public Future<Void> sendPacketToAll(SPacket packet) {
-        return allChannels.writeAndFlush(packet);
+        return allChannels.writeAndFlush(new DefaultStreamPacketContext(packet));
     }
 
     @Override

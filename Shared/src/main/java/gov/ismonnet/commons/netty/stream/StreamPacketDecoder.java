@@ -50,7 +50,11 @@ public class StreamPacketDecoder extends ByteToMessageDecoder {
         try {
             if(packetParser == null)
                 throw new RuntimeException("There is no parser for the given ID (" + packetId+ ')');
-            return packetParser.parse(msg0);
+            try {
+                return packetParser.parse(msg0);
+            } finally {
+                msg0.setIndex(msg0.writerIndex(), msg0.writerIndex());
+            }
         } catch(Exception e) {
             LOGGER.error("Couldn't parse packet (id: {})", packetId, e);
         }

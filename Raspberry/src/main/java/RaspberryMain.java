@@ -1,6 +1,7 @@
 import gov.ismonnet.commons.utils.SneakyThrow;
 import gov.ismonnet.raspberry.AppComponent;
 import gov.ismonnet.raspberry.DaggerAppComponent;
+import io.netty.util.ResourceLeakDetector;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -9,6 +10,7 @@ public class RaspberryMain {
 
     public static void main(String[] args) throws Exception {
 
+        ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.PARANOID);
         final AppComponent app = DaggerAppComponent.builder()
                 .tcpPort(getUnboundPort())
                 .udpPort(getUnboundPort())

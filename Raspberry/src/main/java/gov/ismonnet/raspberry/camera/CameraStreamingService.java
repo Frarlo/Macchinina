@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 class CameraStreamingService implements LifeCycle {
 
     private final ServerNetService serverNetService;
-    private final InputStream h264InputStream;
+    private InputStream h264InputStream;
     private final ExecutorService executor;
 
     private Future<?> future;
@@ -43,7 +43,7 @@ class CameraStreamingService implements LifeCycle {
         future = executor.submit(() -> SneakyThrow.runUnchecked(() -> {
 
             ByteBuf currentNalu = null;
-            boolean sendReliably;
+            boolean sendReliably = false;
             byte oldNaluType = -1;
 
             while(!Thread.currentThread().isInterrupted()) {
@@ -65,8 +65,8 @@ class CameraStreamingService implements LifeCycle {
 
                 if(foundNalUnitStart) {
 
-                    if(currentNalu != null)
-                        System.out.println(oldNaluType + " " + currentNalu.readableBytes() + " " + currentNalu);
+//                    if(currentNalu != null)
+//                        System.out.println(oldNaluType + " " + currentNalu.readableBytes() + " " + currentNalu);
 
                     // The first byte of each NALU contains the NALU type, specifically bits 3 through 7.
                     // (bit 0 is always off, and bits 1-2 indicate whether a NALU is referenced by another NALU).
@@ -75,11 +75,12 @@ class CameraStreamingService implements LifeCycle {
 
                     oldNaluType = naluType;
 
-                    if(currentNalu != null)
-                        serverNetService.sendPacketToAll(new H264NaluPacket(currentNalu), true);
+                    if(currentNalu != null && !sendReliably)
+                        serverNetService.sendPacketToAll(new H264NaluPacket(currentNalu), sendReliably);
 
                     sendReliably = naluType == 7; // Sequence parameter set
                     sendReliably = sendReliably || naluType == 8; // Picture parameter set
+                    sendReliably = sendReliably || naluType == 5; // Picture parameter set
 
                     currentNalu = Unpooled.buffer();
                     for(int i = 0; i < startCodeSize + 1; i++)
@@ -92,8 +93,11 @@ class CameraStreamingService implements LifeCycle {
 
     private byte readByte() throws IOException {
         final int b = h264InputStream.read();
-        if(b == -1)
-            throw new AssertionError("The camera streaming reached the end of stream");
+        if(b == -1) {
+            replaceStream();
+            return readByte();
+//            throw new AssertionError("The camera streaming reached the end of stream");
+        }
         lastBytes = (lastBytes << 8) | b;
         return (byte) getLastBytes(1);
     }
@@ -110,6 +114,10 @@ class CameraStreamingService implements LifeCycle {
         if(length < 0 || length > 8)
             throw new AssertionError("A long is 8 bytes");
         return (lastBytes << (8 * offset)) >>> (8 * (8 - length));
+    }
+
+    private void replaceStream() {
+        h264InputStream = CameraModule.class.getClassLoader().getResourceAsStream("samples/H264_artifacts_motion.h264");
     }
 
     @Override

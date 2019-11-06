@@ -9,6 +9,8 @@ import gov.ismonnet.commons.netty.core.NetworkException;
 import gov.ismonnet.commons.netty.core.SPacket;
 import gov.ismonnet.commons.netty.datagram.DatagramPacketContext;
 import gov.ismonnet.commons.netty.datagram.DatagramPacketEncoder;
+import gov.ismonnet.commons.netty.datagram.DefaultDatagramPacketContext;
+import gov.ismonnet.commons.netty.datagram.SocketCollectionFuture;
 import gov.ismonnet.commons.netty.multi.MultiServerComponent;
 import gov.ismonnet.commons.netty.multi.MultiServerPacketContext;
 import gov.ismonnet.commons.netty.multi.UdpPacketToContextDecoder;
@@ -21,10 +23,15 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.inject.Inject;
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -114,17 +121,17 @@ public class ServerUdpComponent implements MultiServerComponent, LifeCycle {
         return sendPacket((DatagramPacketContext) ctx);
     }
 
+    public static Collection<InetSocketAddress> connected;
+
     @Override
     public Future<Void> sendPacketToAll(SPacket packet) {
-        //TODO
-//        final Map<InetSocketAddress, ChannelFuture> futures = new LinkedHashMap<>(connected.size());
-//        for(InetSocketAddress dst : connected) {
-//            final DatagramPacketContext ctx = new DefaultDatagramPacketContext(packet, dst);
-//            futures.put(dst, sendPacket(ctx));
-//        }
-//
-//        return new SocketCollectionFuture(futures, GlobalEventExecutor.INSTANCE);
-        return null;
+        final Map<InetSocketAddress, ChannelFuture> futures = new LinkedHashMap<>(connected.size());
+        for(InetSocketAddress dst : connected) {
+            final DatagramPacketContext ctx = new DefaultDatagramPacketContext(packet, dst);
+            futures.put(dst, sendPacket(ctx));
+        }
+
+        return new SocketCollectionFuture(futures, GlobalEventExecutor.INSTANCE);
     }
 
     private ChannelFuture sendPacket(DatagramPacketContext ctx) {
