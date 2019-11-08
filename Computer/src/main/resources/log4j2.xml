@@ -9,6 +9,9 @@
         <Logger name="gov.ismonnet" additivity="false" level="trace">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="gov.ismonnet.commons.netty" additivity="false" level="warn">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Logger name="gov.ismonnet.computer.discoverer" additivity="false" level="warn">
             <AppenderRef ref="Console"/>
         </Logger>

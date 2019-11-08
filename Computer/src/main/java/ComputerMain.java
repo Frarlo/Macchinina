@@ -21,7 +21,7 @@ public class ComputerMain {
         final AppComponent app = DaggerAppComponent.builder()
                 .address(discoveredServer.getAddress())
                 .streamPort(discoveredServer.getStreamPort())
-                .datagramPort(discoveredServer.getStreamPort())
+                .datagramPort(discoveredServer.getDatagramPort())
                 .build();
         app.eagerInit();
         app.lifeCycleService().start();

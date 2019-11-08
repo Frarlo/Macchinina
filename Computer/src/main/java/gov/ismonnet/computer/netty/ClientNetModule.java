@@ -29,8 +29,8 @@ public abstract class ClientNetModule {
         return new InetSocketAddress(address, streamPort);
     }
 
-    @Provides @Datagram static InetSocketAddress datagramAddress(InetAddress address, @Datagram int streamPort) {
-        return new InetSocketAddress(address, streamPort);
+    @Provides @Datagram static InetSocketAddress datagramAddress(InetAddress address, @Datagram int datagramPort) {
+        return new InetSocketAddress(address, datagramPort);
     }
 
     // Eager singletons

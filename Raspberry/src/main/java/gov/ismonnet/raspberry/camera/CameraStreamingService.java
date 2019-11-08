@@ -44,7 +44,6 @@ class CameraStreamingService implements LifeCycle {
 
             ByteBuf currentNalu = null;
             boolean sendReliably = false;
-            byte oldNaluType = -1;
 
             while(!Thread.currentThread().isInterrupted()) {
                 final byte b = readByte();
@@ -64,19 +63,15 @@ class CameraStreamingService implements LifeCycle {
                     startCodeSize = 4;
 
                 if(foundNalUnitStart) {
-
-//                    if(currentNalu != null)
-//                        System.out.println(oldNaluType + " " + currentNalu.readableBytes() + " " + currentNalu);
-
                     // The first byte of each NALU contains the NALU type, specifically bits 3 through 7.
                     // (bit 0 is always off, and bits 1-2 indicate whether a NALU is referenced by another NALU).
                     byte naluType = (byte) getLastBytes(startCodeSize + 1, 1);
                     naluType = (byte) (((byte)(naluType << 3)) >>> 3);
 
-                    oldNaluType = naluType;
-
-                    if(currentNalu != null && !sendReliably)
+                    if(currentNalu != null) {
                         serverNetService.sendPacketToAll(new H264NaluPacket(currentNalu), sendReliably);
+                        Thread.sleep(1000 / 120);
+                    }
 
                     sendReliably = naluType == 7; // Sequence parameter set
                     sendReliably = sendReliably || naluType == 8; // Picture parameter set

@@ -15,10 +15,10 @@ public class UdpPacketToContextDecoder extends MessageToMessageDecoder<DatagramP
     private final MultiServerComponent netService;
     private final DatagramPacketDecoder decoder;
 
-    public UdpPacketToContextDecoder(MultiServerComponent netComponent,
+    public UdpPacketToContextDecoder(MultiServerComponent netService,
                                      Map<Byte, ? extends PacketParser> packetParsers) {
 
-        this.netService = netComponent;
+        this.netService = netService;
         this.decoder = new DatagramPacketDecoder(packetParsers);
     }
 
